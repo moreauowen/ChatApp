@@ -13,7 +13,6 @@ import queue
 
 
 def run_server():
-    THREAD_LIST = []
     server_name = socket.gethostname()
     server_addr = socket.gethostbyname(server_name)
     server_port = 5000
@@ -22,7 +21,7 @@ def run_server():
     server_socket.bind(("", server_port))
     server_socket.listen(1)
     print("[INFO]: Starting server for chat application - address {}.".format(server_addr))
-    #raise AssertionError("END!")
+
     connection_socket, addr = server_socket.accept()
     client_name = addr[0]
     client_port = addr[1]
