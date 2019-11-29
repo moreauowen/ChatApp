@@ -1,6 +1,11 @@
 """
-Client.py
-@author Owen Moreau
+Client program for multi-threaded TCP Chat Application.
+Final Project - Network Programming, Fall 2019
+Professor Salem Othman
+Fri, Oct 25, 2019
+
+:authors:
+    Owen Moreau, Jian Huang, Mario La
 """
 import socket
 import sys
@@ -60,11 +65,11 @@ class User:
 def create_socket():
     try:
         new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        return new_socket
     except socket.error as err:
         print("Oops! Error while creating socket. Please restart program and try again.")
         print("Error: {}".format(err))
         sys.exit(1)
-    return new_socket
 
 
 def run_client():
@@ -72,3 +77,7 @@ def run_client():
     client.new_connection()
     print(client)
     print("Test test")
+
+
+if __name__ == "__main__":
+    run_client()
