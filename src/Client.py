@@ -9,6 +9,8 @@ Fri, Oct 25, 2019
 """
 import socket
 import sys
+DEV_SERVER_ADDR = "169.254.128.210"
+DEV_SERVER_PORT = 5000
 
 
 class User:
@@ -18,17 +20,25 @@ class User:
     """
     def __init__(self):
         self.user_name = input("Please enter your display name: ")
-        self.dest_addr = input("Enter the address of the server you'd like to reach: ")
-        self.dest_port = input("Enter the port of the server you'd like to reach: ")
+        # self.dest_addr = input("Enter the address of the server you'd like to reach: ")
+        self.dest_addr = DEV_SERVER_ADDR
+        # self.dest_port = input("Enter the port of the server you'd like to reach: ")
+        self.dest_port = DEV_SERVER_PORT
 
         self.user_address = socket.gethostbyname(socket.gethostname())
         self.user_socket = create_socket()
 
         self.connected = False
 
+    def __str__(self):
+        display = "Name: {}, IP: {}".format(self.user_name, self.user_address)
+        return display
+
     def new_connection(self):
         try:
-            self.user_socket.connect(self.dest_addr, self.dest_port)
+            # Creates destination tuple including entered destination address and port
+            destination = (self.dest_addr, int(self.dest_port))
+            self.user_socket.connect(destination)
         except socket.gaierror as err1:
             print("Oops! Error while connecting to server. Restart program and try again.")
             print("Error: {}".format(err1))
@@ -49,13 +59,12 @@ class User:
             print("Error: {}".format(err))
             sys.exit(1)
 
-    def recv_message(self):
+    def receive_message(self):
         try:
             server_response = self.user_socket.recv(1024).decode()
-            #if server_response == "1":
-                # Message wasn't received properly
-            #elif server_response == "0":
-                # Message properly received
+            # TODO - remove line 66 after testing
+            print("TEMP - Got the following message from server: {}".format(server_response))
+            return server_response
         except socket.error as err:
             print("Oops! Error while receiving response. Please restart program and try again.")
             print("Error: {}".format(err))
@@ -73,10 +82,12 @@ def create_socket():
 
 
 def run_client():
+    print("_____________________CHAT APPLICATION v0.1.0 (CLIENT_DEV)_____________________")
     client = User()
     client.new_connection()
-    print(client)
-    print("Test test")
+    while True:
+        client.send_message()
+        client.receive_message()
 
 
 if __name__ == "__main__":
