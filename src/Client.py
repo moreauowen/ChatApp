@@ -9,6 +9,8 @@ Fri, Oct 25, 2019
 """
 import socket
 import sys
+import select
+
 DEV_SERVER_ADDR = "169.254.128.210"
 DEV_SERVER_PORT = 5000
 
@@ -54,6 +56,7 @@ class User:
         try:
             new_message = input(" -> ")
             self.user_socket.send(new_message.encode())
+            return new_message
         except socket.error as err:
             print("Oops! Error while sending message. Please restart program and try again.")
             print("Error: {}".format(err))
@@ -63,7 +66,7 @@ class User:
         try:
             server_response = self.user_socket.recv(1024).decode()
             # TODO - remove line 66 after testing
-            print("TEMP - Got the following message from server: {}".format(server_response))
+            print("Got the following message from server: {}".format(server_response))
             return server_response
         except socket.error as err:
             print("Oops! Error while receiving response. Please restart program and try again.")
@@ -86,8 +89,13 @@ def run_client():
     client = User()
     client.new_connection()
     while True:
+        response = client.receive_message()
+        if not response or response == "STOP":
+            break
         client.send_message()
-        client.receive_message()
+
+    client.user_socket.close()
+    print("DONE!!!!!!!!!!__________________________________________")
 
 
 if __name__ == "__main__":
