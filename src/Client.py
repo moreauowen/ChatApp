@@ -11,6 +11,8 @@ import socket
 import sys
 import select
 
+# TODO - Remove following after testing
+# The following are hard-coded in temporarily for local testing
 DEV_SERVER_ADDR = "169.254.128.210"
 DEV_SERVER_PORT = 5000
 
@@ -21,7 +23,7 @@ class User:
     This class is used to store all user-related info including the socket to be accessed easily.
     """
     def __init__(self):
-        self.user_name = input("Please enter your display name: ")
+        self.user_name = input("Enter your display name: ")
         # self.dest_addr = input("Enter the address of the server you'd like to reach: ")
         self.dest_addr = DEV_SERVER_ADDR
         # self.dest_port = input("Enter the port of the server you'd like to reach: ")
@@ -30,72 +32,112 @@ class User:
         self.user_address = socket.gethostbyname(socket.gethostname())
         self.user_socket = create_socket()
 
-        self.connected = False
-
     def __str__(self):
         display = "Name: {}, IP: {}".format(self.user_name, self.user_address)
         return display
 
     def new_connection(self):
+        """
+        Establishes a new connection to socket at destination address and port.
+        """
         try:
             # Creates destination tuple including entered destination address and port
             destination = (self.dest_addr, int(self.dest_port))
             self.user_socket.connect(destination)
         except socket.gaierror as err1:
-            print("Oops! Error while connecting to server. Restart program and try again.")
+            print("[FATAL] Oops! Error while connecting to server. Restart program and try again.")
             print("Error: {}".format(err1))
             sys.exit(1)
         except socket.error as err2:
-            print("Oops! Error with client socket. Restart program and try again.")
+            print("[FATAL] Oops! Error with client socket. Restart program and try again.")
             print("Error: {}".format(err2))
             sys.exit(1)
         print("[INFO]: Now connected to {}:{}!".format(self.dest_addr, self.dest_port))
-        self.connected = True
+        print("________________________________________________________________________________________")
 
-    def send_message(self):
+    def send_message(self, msg):
+        """
+        Sends encoded message through socket.
+        :param msg: Message that the user entered
+        """
         try:
-            new_message = input(" -> ")
+            new_message = msg
             self.user_socket.send(new_message.encode())
-            return new_message
         except socket.error as err:
-            print("Oops! Error while sending message. Please restart program and try again.")
+            print("[FATAL] Oops! Error while sending message. Please restart program and try again.")
             print("Error: {}".format(err))
             sys.exit(1)
 
     def receive_message(self):
+        """
+        Receives response message from server and decodes it.
+        :return: Received message
+        """
         try:
             server_response = self.user_socket.recv(1024).decode()
-            # TODO - remove line 66 after testing
-            print("Got the following message from server: {}".format(server_response))
             return server_response
         except socket.error as err:
-            print("Oops! Error while receiving response. Please restart program and try again.")
+            print("[FATAL] Oops! Error while receiving response. Please restart program and try again.")
             print("Error: {}".format(err))
             sys.exit(1)
 
 
 def create_socket():
+    """
+    Creates a new TCP socket to connect to server socket.
+    """
     try:
         new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         return new_socket
     except socket.error as err:
-        print("Oops! Error while creating socket. Please restart program and try again.")
+        print("[FATAL] Oops! Error while creating socket. Please restart program and try again.")
         print("Error: {}".format(err))
         sys.exit(1)
 
 
+def check_for_end(message):
+    """
+    Helper function to determine if message is to STOP connection or not.
+    :param message: given message
+    :return: True if message stops program, else False
+    """
+    if message == "STOP":
+        return True
+    else:
+        return False
+
+
 def run_client():
+    """
+    Rough draft of client program still in development.
+    TODO - Add better documentation
+    """
     print("_____________________CHAT APPLICATION v0.1.0 (CLIENT_DEV)_____________________")
     client = User()
     client.new_connection()
-    while True:
-        response = client.receive_message()
-        if not response or response == "STOP":
-            break
-        client.send_message()
+
+    running = True
+    while running:
+        socket_list = [client.user_socket]
+        read_sockets, w, e = select.select(socket_list, [], [])
+
+        for sock in read_sockets + [sys.stdin]:
+            if sock == client.user_socket:
+                response = client.receive_message()
+                if check_for_end(response):
+                    running = False
+                print(response)
+            else:
+                new_msg = sys.stdin.readline()
+                client.send_message(new_msg)
+                if check_for_end(new_msg):
+                    running = False
+                # sys.stdout.write("[YOU]: ")
+                # sys.stdout.write(new_msg)
+                sys.stdout.flush()
 
     client.user_socket.close()
-    print("DONE!!!!!!!!!!__________________________________________")
+    print("[INFO] The connection was successfully closed. Thanks for using ChatApp!")
 
 
 if __name__ == "__main__":
