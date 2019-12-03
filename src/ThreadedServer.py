@@ -10,10 +10,10 @@ Fri, Oct 25, 2019
 import socket
 from _thread import *
 
+# This client_list is used to track each currently-connected client.
 client_list = []
 
 
-# cd "Documents\School Related\Sophomore Year 2019-2020\Network Programming\Final\ChatApp"
 class ThreadedServer:
     """
     ThreadedServer class represents threaded server for TCP Chat Application.

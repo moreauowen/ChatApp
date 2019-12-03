@@ -10,6 +10,7 @@ Fri, Oct 25, 2019
 import socket
 import sys
 import select
+from _thread import *
 
 # TODO - Remove following after testing
 # The following are hard-coded in temporarily for local testing
@@ -21,12 +22,15 @@ class User:
     """
     The User class represents a unique user.
     This class is used to store all user-related info including the socket to be accessed easily.
+
+    NOTE - We would like to send the User object information over with each message but we are simply sending
+           the encoded string message until base functionality is complete.
     """
     def __init__(self):
         self.user_name = input("Enter your display name: ")
-        # self.dest_addr = input("Enter the address of the server you'd like to reach: ")
+        # self.dest_addr = input("Enter the DESTINATION ADDRESS of the server: ")
         self.dest_addr = DEV_SERVER_ADDR
-        # self.dest_port = input("Enter the port of the server you'd like to reach: ")
+        # self.dest_port = input("Enter the DESTINATION PORT of the server: ")
         self.dest_port = DEV_SERVER_PORT
 
         self.user_address = socket.gethostbyname(socket.gethostname())
@@ -38,7 +42,7 @@ class User:
 
     def new_connection(self):
         """
-        Establishes a new connection to socket at destination address and port.
+        Establishes a new connection to socket at User's destination address and port.
         """
         try:
             # Creates destination tuple including entered destination address and port
@@ -107,10 +111,14 @@ def check_for_end(message):
         return False
 
 
+def print_thread(sock):
+    print()
+
+
 def run_client():
     """
     Rough draft of client program still in development.
-    TODO - Add better documentation
+    TODO - Add better documentation once functionality complete.
     """
     print("_____________________CHAT APPLICATION v0.1.0 (CLIENT_DEV)_____________________")
     client = User()
@@ -121,6 +129,8 @@ def run_client():
         socket_list = [client.user_socket]
         read_sockets, w, e = select.select(socket_list, [], [])
 
+        # Must add sys.stdin to loop because select() only works with sockets in Windows
+        # Not any file descriptor like Linux
         for sock in read_sockets + [sys.stdin]:
             if sock == client.user_socket:
                 response = client.receive_message()
