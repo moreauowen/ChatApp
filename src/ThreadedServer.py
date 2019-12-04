@@ -9,6 +9,7 @@ Fri, Oct 25, 2019
 """
 import socket
 from _thread import *
+import sys
 
 # This client_list is used to track each currently-connected client.
 client_list = []
@@ -57,20 +58,27 @@ def client_thread(conn_socket, addr):
     """
     conn_socket.send("[INFO] You are now connected to the server".encode())
     while True:
-        new_message = conn_socket.recv(1024).decode()
-        if new_message:
-            to_send = "[{}]: {}".format(addr[0], new_message)
-            print(to_send)
-            broadcast_message(to_send, conn_socket)
+        try:
+            new_message = conn_socket.recv(1024).decode()
+            if new_message:
+                to_send = "[{}]: {}".format(addr[0], new_message)
+                print(to_send)
+                broadcast_message(to_send, conn_socket)
+            reply = "OK"
+            if new_message == "STOP":
+                print("Now exiting client thread for [{}]".format(addr[0]))
+                break
+            conn_socket.send(reply.encode())
+        except ConnectionAbortedError as con_err:
+            print("[FATAL] Client suddenly disconnected!")
+            print("Error: {}".format(con_err))
+            sys.exit(1)
+        except ConnectionResetError as con_err:
+            print("[FATAL] Client suddenly disconnected!")
+            print("Error: {}".format(con_err))
+            sys.exit(1)
 
-        reply = "OK"
-
-        if new_message == "STOP":
-            print("Now exiting client thread for [{}]".format(addr[0]))
-            break
-
-        conn_socket.send(reply.encode())
-
+    # Do the following after STOP message received.
     conn_socket.close()
     print("Connection with [{}] is now closed!".format(addr[0]))
 

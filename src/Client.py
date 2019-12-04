@@ -9,13 +9,8 @@ Fri, Oct 25, 2019
 """
 import socket
 import sys
-import select
+import time
 from _thread import *
-
-# TODO - Remove following after testing
-# The following are hard-coded in temporarily for local testing
-DEV_SERVER_ADDR = "169.254.128.210"
-DEV_SERVER_PORT = 5000
 
 
 class User:
@@ -27,18 +22,11 @@ class User:
            the encoded string message until base functionality is complete.
     """
     def __init__(self):
-        self.user_name = input("Enter your display name: ")
-        # self.dest_addr = input("Enter the DESTINATION ADDRESS of the server: ")
-        self.dest_addr = DEV_SERVER_ADDR
-        # self.dest_port = input("Enter the DESTINATION PORT of the server: ")
-        self.dest_port = DEV_SERVER_PORT
+        self.dest_addr = input("Enter the DESTINATION ADDRESS of the server: ")
+        self.dest_port = input("Enter the DESTINATION PORT of the server: ")
 
         self.user_address = socket.gethostbyname(socket.gethostname())
         self.user_socket = create_socket()
-
-    def __str__(self):
-        display = "Name: {}, IP: {}".format(self.user_name, self.user_address)
-        return display
 
     def new_connection(self):
         """
@@ -111,8 +99,28 @@ def check_for_end(message):
         return False
 
 
-def print_thread(sock):
-    print()
+def recv_msg_thread(client):
+    running = True
+    while running:
+        message = client.receive_message()
+        if message != "OK":
+            print(message)
+        elif check_for_end(message):
+            running = False
+
+    client.user_socket.close()
+
+
+def send_msg_thread(client):
+    running = True
+    while running:
+        new_msg = sys.stdin.readline()
+        client.send_message(new_msg)
+        print("\n[YOU]: {}".format(new_msg))
+        if check_for_end(new_msg):
+            running = False
+
+    client.user_socket.close()
 
 
 def run_client():
@@ -120,34 +128,14 @@ def run_client():
     Rough draft of client program still in development.
     TODO - Add better documentation once functionality complete.
     """
-    print("_____________________CHAT APPLICATION v0.1.0 (CLIENT_DEV)_____________________")
+    print("__________________________CHAT APPLICATION v0.1.0__________________________")
     client = User()
     client.new_connection()
 
-    running = True
-    while running:
-        socket_list = [client.user_socket]
-        read_sockets, w, e = select.select(socket_list, [], [])
-
-        # Must add sys.stdin to loop because select() only works with sockets in Windows
-        # Not any file descriptor like Linux
-        for sock in read_sockets + [sys.stdin]:
-            if sock == client.user_socket:
-                response = client.receive_message()
-                if check_for_end(response):
-                    running = False
-                print(response)
-            else:
-                new_msg = sys.stdin.readline()
-                client.send_message(new_msg)
-                if check_for_end(new_msg):
-                    running = False
-                # sys.stdout.write("[YOU]: ")
-                # sys.stdout.write(new_msg)
-                sys.stdout.flush()
-
-    client.user_socket.close()
-    print("[INFO] The connection was successfully closed. Thanks for using ChatApp!")
+    while True:
+        time.sleep(1)
+        start_new_thread(recv_msg_thread, (client,))
+        start_new_thread(send_msg_thread, (client,))
 
 
 if __name__ == "__main__":
