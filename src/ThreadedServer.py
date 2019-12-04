@@ -64,10 +64,13 @@ def client_thread(conn_socket, addr):
                 to_send = "[{}]: {}".format(addr[0], new_message)
                 print(to_send)
                 broadcast_message(to_send, conn_socket)
+
             reply = "OK"
+
             if new_message == "STOP":
                 print("Now exiting client thread for [{}]".format(addr[0]))
                 break
+
             conn_socket.send(reply.encode())
         except ConnectionAbortedError as con_err:
             print("[FATAL] Client suddenly disconnected!")
