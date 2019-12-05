@@ -100,6 +100,11 @@ def check_for_end(message):
 
 
 def recv_msg_thread(client):
+    """
+    Client's thread process for receiving and printing messages. If message is simply "OK" response
+    then it is not printed.
+    :param client: User object for connected client
+    """
     running = True
     while running:
         message = client.receive_message()
@@ -112,6 +117,11 @@ def recv_msg_thread(client):
 
 
 def send_msg_thread(client):
+    """
+    Client's thread process for typing and sending messages.
+    :param client:
+    :return:
+    """
     running = True
     while running:
         new_msg = sys.stdin.readline()
@@ -125,8 +135,8 @@ def send_msg_thread(client):
 
 def run_client():
     """
-    Rough draft of client program still in development.
-    TODO - Add better documentation once functionality complete.
+    Client program builds a new User object and establishes connection.
+    A thread process starts for receiving/printing messages as well as typing/sending messages.
     """
     print("__________________________CHAT APPLICATION v0.1.0__________________________")
     client = User()

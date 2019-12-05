@@ -49,12 +49,10 @@ class ThreadedServer:
 
 def client_thread(conn_socket, addr):
     """
-    TODO - UPDATE THIS DOCUMENTATION AT A LATER TIME!
-    TODO - ADD FOLLOWING EXCEPTION HANDING:
-        ConnectionResetError
-        socket.error
-    :param conn_socket: todo
-    :param addr: todo
+    Thread process for each connected client. Receives incoming message and responds with OK to show
+    message was received properly.
+    :param conn_socket: socket for connected client
+    :param addr: address information of client
     """
     conn_socket.send("[INFO] You are now connected to the server".encode())
     while True:
@@ -73,11 +71,11 @@ def client_thread(conn_socket, addr):
 
             conn_socket.send(reply.encode())
         except ConnectionAbortedError as con_err:
-            print("[FATAL] Client suddenly disconnected!")
+            print("[ERROR] Client {} suddenly disconnected!".format(addr[0]))
             print("Error: {}".format(con_err))
             sys.exit(1)
         except ConnectionResetError as con_err:
-            print("[FATAL] Client suddenly disconnected!")
+            print("[ERROR] Client {} suddenly disconnected!".format(addr[0]))
             print("Error: {}".format(con_err))
             sys.exit(1)
 
